@@ -1,0 +1,11 @@
+# Integration tests need the throwaway server from tools/radicale-test.
+# They are skipped by default;
+tags:
+  integration:
+    skip: "Needs tools/radicale-test/up.sh; run with: dart test -P integration"
+
+presets:
+  integration:
+    tags:
+      integration:
+        skip: false

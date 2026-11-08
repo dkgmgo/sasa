@@ -1,7 +1,16 @@
-/// CalDAV client and iCalendar parsing for Sasa.
+/// CalDAV client and iCalendar parsing for Sasa (pure Dart).
 ///
-/// Not implemented yet.
+/// - [CalDavClient]: discovery, collection listing, `calendar-query`.
+/// - [CalDavSource]: core's `CalendarSource` on top of it, with client-side
+///   recurrence expansion.
+/// - iCalendar helpers: [parseIcal], [expandEvents], [eventsFromIcal],
+///   [tasksFromIcal].
 library;
 
-/// Version of this package's public API.
-const int sasaCaldavApiVersion = 0;
+export 'src/caldav_source.dart';
+export 'src/dav/caldav_client.dart';
+export 'src/dav/multistatus.dart' show DavResponse, parseMultistatus;
+export 'src/ical/expand.dart';
+export 'src/ical/ical_parser.dart';
+export 'src/ical/ical_values.dart';
+export 'src/ical/mapping.dart';

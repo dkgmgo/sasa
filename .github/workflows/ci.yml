@@ -22,12 +22,21 @@ jobs:
       - run: tools/check.sh
 
   radicale:
-    name: Test Radicale starts and seeds
+    name: CalDAV integration tests (test Radicale)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.9
+          cache: true
       - name: Install podman-compose
         run: pipx install podman-compose
       - run: tools/radicale-test/up.sh
+      - run: flutter pub get
+      - name: Integration tests
+        working-directory: packages/caldav
+        run: dart test -P integration test/integration
       - if: always()
         run: tools/radicale-test/down.sh

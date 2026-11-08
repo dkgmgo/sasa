@@ -10,6 +10,9 @@ tools/radicale-test/down.sh   # stop and delete everything
 
 Requires `podman` and `podman-compose`. Set `SASA_RADICALE_PORT` to use another port.
 
+The CalDAV integration tests use it: `(cd packages/caldav && dart test -P integration)`.
+They read `SASA_RADICALE_URL` or `SASA_RADICALE_PORT` like the scripts.
+
 - User: `test`, password: `test`
 - `/test/sasa-calendar/` (VEVENT) and `/test/sasa-tasks/` (VTODO)
 
