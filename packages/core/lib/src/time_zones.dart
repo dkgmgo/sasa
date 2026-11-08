@@ -19,3 +19,12 @@ tz.Location locationFor(String name) {
 /// [DateTime] for the same instant.
 DateTime utcInstant(DateTime d) =>
     DateTime.fromMicrosecondsSinceEpoch(d.microsecondsSinceEpoch, isUtc: true);
+
+/// The last second (23:59:59) of the calendar [date] in [zone], as a UTC
+/// instant. Only the date fields of [date] are used.
+///
+/// Used for date-only task due dates, which count as due until the end of
+/// that day.
+DateTime endOfLocalDate(DateTime date, tz.Location zone) =>
+    utcInstant(tz.TZDateTime(zone, date.year, date.month, date.day + 1))
+        .subtract(const Duration(seconds: 1));

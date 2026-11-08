@@ -1,3 +1,15 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-  package="fr.dkgmgo.davx_bridge">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Read-only: Sasa never writes to calendars or tasks. -->
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
+    <!-- Tasks.org's OpenTasks-compatible provider, filled by DAVx⁵. -->
+    <uses-permission android:name="org.tasks.permission.READ_TASKS" />
+    <!-- The plain OpenTasks app, same contract. -->
+    <uses-permission android:name="org.dmfs.permission.READ_TASKS" />
+
+    <!-- Package visibility (Android 11+) for the task providers. -->
+    <queries>
+        <provider android:authorities="org.tasks.opentasks" />
+        <provider android:authorities="org.dmfs.tasks" />
+    </queries>
 </manifest>

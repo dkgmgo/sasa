@@ -98,11 +98,7 @@ DateTime? _due(IcalComponent todo, ZoneResolver zones) {
   }
   if (due == null) return null;
   if (!due.isDate) return due.instant(zones);
-  final w = due.wall;
-  return wallToInstant(
-    DateTime.utc(w.year, w.month, w.day + 1),
-    zones.defaultZone,
-  ).subtract(const Duration(seconds: 1));
+  return endOfLocalDate(due.wall, zones.defaultZone);
 }
 
 String? _text(IcalComponent c, String name) {

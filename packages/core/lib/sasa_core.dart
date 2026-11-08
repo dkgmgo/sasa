@@ -22,4 +22,6 @@ export 'src/models/mapping_rule.dart';
 export 'src/models/nudge.dart';
 export 'src/models/task_item.dart';
 export 'src/sources/calendar_source.dart';
+export 'src/sources/fallback_source.dart';
+export 'src/sources/source_selector.dart';
 export 'src/time_zones.dart';

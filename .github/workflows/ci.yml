@@ -21,6 +21,28 @@ jobs:
           cache: true
       - run: tools/check.sh
 
+  android-plugin:
+    name: Android build and plugin unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.9
+          cache: true
+      - run: flutter pub get
+      - name: Build debug APK (compiles the Kotlin plugin)
+        working-directory: apps/app
+        run: flutter build apk --debug
+      - name: Kotlin unit tests
+        working-directory: apps/app/android
+        run: ./gradlew :davx_bridge:testDebugUnitTest
+
   radicale:
     name: CalDAV integration tests (test Radicale)
     runs-on: ubuntu-latest
