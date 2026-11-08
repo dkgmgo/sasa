@@ -16,3 +16,7 @@ dart run sasa_cli:sasa --help
 tools/radicale-test/up.sh # test CalDAV server on 127.0.0.1:5232
 (cd packages/caldav && dart test -P integration) # needs the test server
 ```
+
+## Disclaimer
+
+This app has been coded with the help of AI tools.
