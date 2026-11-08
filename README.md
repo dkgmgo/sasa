@@ -1,6 +1,6 @@
 # Sasa
 
-A local-first, open-source day organiser. It reads the calendars and tasks you already keep in a CalDAV server (such as Radicale, directly or through DAVx⁵ on Android) and helps you use your free time: a morning brief, "I'm free, what now?" suggestions, and more. It is meant to become another calendar.
+A local-first day organiser. It reads the calendars and tasks you already keep in a CalDAV server (such as Radicale, directly or through DAVx⁵ on Android) and helps you use your free time: a morning brief, "I'm free, what now?" suggestions, and more. It is meant to become another calendar.
 
 ## Development
 

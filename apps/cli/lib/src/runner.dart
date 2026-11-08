@@ -16,7 +16,7 @@ Future<int> runSasa(
   StringSink err,
 ) async {
   final runner =
-      CommandRunner<int>('sasa', 'Sasa — a local-first day organiser.')
+      CommandRunner<int>('sasa', 'Sasa, a local-first day organiser.')
         ..addCommand(
           _StubCommand('brief', 'Render and send the morning brief.', out),
         )

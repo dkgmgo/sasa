@@ -3,6 +3,9 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+# Always use podman-compose.
+export PODMAN_COMPOSE_PROVIDER="${PODMAN_COMPOSE_PROVIDER:-podman-compose}"
+
 port="${SASA_RADICALE_PORT:-5232}"
 podman compose -f compose.yaml up -d --build
 
