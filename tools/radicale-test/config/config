@@ -1,0 +1,18 @@
+# Test-only configuration. Plain-text passwords are acceptable here because
+# this server is disposable and bound to localhost.
+[server]
+hosts = 0.0.0.0:5232
+
+[auth]
+type = htpasswd
+htpasswd_filename = /etc/radicale/users
+htpasswd_encryption = plain
+
+[rights]
+type = owner_only
+
+[storage]
+filesystem_folder = /var/lib/radicale/collections
+
+[logging]
+level = info

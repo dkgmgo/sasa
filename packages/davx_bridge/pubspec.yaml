@@ -1,0 +1,26 @@
+name: davx_bridge
+description: "Android plugin for Sasa that reads calendars (CalendarContract) and tasks synced by DAVx⁵."
+version: 0.0.1
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.13.0
+  flutter: '>=3.3.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  plugin_platform_interface: ^2.1.8
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: fr.dkgmgo.davx_bridge
+        pluginClass: DavxBridgePlugin

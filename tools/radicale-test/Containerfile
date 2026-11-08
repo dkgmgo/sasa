@@ -1,0 +1,15 @@
+# Throwaway Radicale used only by Sasa's integration tests.
+FROM docker.io/library/python:3.13-alpine
+
+ARG RADICALE_VERSION=3.9.0
+RUN pip install --no-cache-dir "radicale==${RADICALE_VERSION}" \
+ && adduser -D -H -u 10001 radicale \
+ && mkdir -p /var/lib/radicale/collections \
+ && chown -R radicale:radicale /var/lib/radicale
+
+COPY config/config /etc/radicale/config
+COPY config/users /etc/radicale/users
+
+USER radicale
+EXPOSE 5232
+CMD ["radicale", "--config", "/etc/radicale/config"]

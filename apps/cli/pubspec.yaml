@@ -1,0 +1,19 @@
+name: sasa_cli
+description: "Command-line companion for Sasa, used for background jobs on Linux (brief, tick, suggest, report)."
+version: 0.0.1
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.13.0
+
+executables:
+  sasa: sasa
+
+dependencies:
+  args: ^2.7.0
+  sasa_core:
+    path: ../../packages/core
+
+dev_dependencies:
+  test: ^1.26.0

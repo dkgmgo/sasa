@@ -1,0 +1,16 @@
+# Disposable Radicale for integration tests.
+name: sasa-radicale-test
+
+services:
+  radicale:
+    build:
+      context: .
+      dockerfile: Containerfile
+    image: localhost/sasa-radicale-test:3.9.0
+    ports:
+      - "127.0.0.1:${SASA_RADICALE_PORT:-5232}:5232"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:5232/.web/"]
+      interval: 2s
+      timeout: 2s
+      retries: 15

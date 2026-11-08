@@ -1,0 +1,11 @@
+name: sasa_core
+description: "Pure-Dart domain logic for Sasa: models, free blocks, categoriser, suggester, nudges, stats and the event log."
+version: 0.0.1
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.13.0
+
+dev_dependencies:
+  test: ^1.26.0
