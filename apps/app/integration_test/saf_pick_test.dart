@@ -4,7 +4,7 @@
 //
 // --no-uninstall keeps the folder grant for phase 2. The test opens the
 // system folder picker: choose an EMPTY THROWAWAY folder. Everything is
-// written under a unique `sasa-device-test-<n>/` subfolder; files are deleted 
+// written under a unique `sasa-device-test-<n>/` subfolder; files are deleted
 // again in phase 2, which also checks that access survived a restart.
 import 'dart:convert';
 import 'dart:math';
