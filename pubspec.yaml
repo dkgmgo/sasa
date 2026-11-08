@@ -9,6 +9,7 @@ workspace:
   - packages/caldav
   - packages/research
   - packages/davx_bridge
+  - packages/saf_folder
   - apps/app
   - apps/cli
 

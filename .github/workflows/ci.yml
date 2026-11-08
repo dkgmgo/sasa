@@ -36,12 +36,12 @@ jobs:
           flutter-version: 3.47.9
           cache: true
       - run: flutter pub get
-      - name: Build debug APK (compiles the Kotlin plugin)
+      - name: Build debug APK (compiles the Kotlin plugins)
         working-directory: apps/app
         run: flutter build apk --debug
       - name: Kotlin unit tests
         working-directory: apps/app/android
-        run: ./gradlew :davx_bridge:testDebugUnitTest
+        run: ./gradlew :davx_bridge:testDebugUnitTest :saf_folder:testDebugUnitTest
 
   radicale:
     name: CalDAV integration tests (test Radicale)

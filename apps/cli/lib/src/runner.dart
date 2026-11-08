@@ -1,5 +1,10 @@
+import 'dart:io';
+
 import 'package:args/command_runner.dart';
 import 'package:sasa_core/sasa_core.dart';
+
+import 'secrets.dart';
+import 'status.dart';
 
 /// Exit code used when a command exists but is not implemented yet.
 const int exitNotImplemented = 3;
@@ -9,14 +14,45 @@ const int exitUsage = 64;
 
 /// Runs the `sasa` CLI with [arguments], writing to [out] and [err].
 ///
-/// Returns the process exit code.
+/// [env] defaults to the process environment and [keyring] to libsecret via
+/// `secret-tool`. Returns the exit code.
 Future<int> runSasa(
   List<String> arguments,
   StringSink out,
-  StringSink err,
-) async {
+  StringSink err, {
+  Map<String, String>? env,
+  Keyring? keyring,
+}) async {
   final runner =
       CommandRunner<int>('sasa', 'Sasa, a local-first day organiser.')
+        ..argParser.addOption(
+          'folder',
+          help:
+              'Synced folder (the one containing Sasa/). Default: '
+              r'$SASA_FOLDER, then the folder chosen in the app.',
+          valueHelp: 'path',
+        )
+        ..argParser.addOption(
+          'device-file',
+          help: r'Default: $XDG_CONFIG_HOME/sasa/device.json.',
+          valueHelp: 'path',
+        )
+        ..argParser.addOption(
+          'secrets-file',
+          help:
+              'Env file with SASA_CALDAV_URL/USER/PASSWORD, used when the '
+              r'variables are not set. Default: $XDG_CONFIG_HOME/sasa/'
+              'secrets.env. Must not be inside the synced folder.',
+          valueHelp: 'path',
+        )
+        ..addCommand(
+          StatusCommand(
+            out: out,
+            err: err,
+            env: env ?? Platform.environment,
+            keyring: keyring ?? secretToolKeyring(),
+          ),
+        )
         ..addCommand(
           _StubCommand('brief', 'Render and send the morning brief.', out),
         )

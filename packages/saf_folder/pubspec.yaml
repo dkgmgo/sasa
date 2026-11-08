@@ -1,0 +1,27 @@
+name: saf_folder
+description: "Android plugin for Sasa: read and append to files in a folder picked with the Storage Access Framework, from the UI and background engines."
+version: 0.0.1
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.13.0
+  flutter: '>=3.3.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  sasa_core:
+    path: ../core
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: fr.dkgmgo.saf_folder
+        pluginClass: SafFolderPlugin

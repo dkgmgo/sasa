@@ -5,7 +5,7 @@ A local-first day organiser. It reads the calendars and tasks you already keep i
 ## Development
 
 Requirements: Flutter (stable), Android SDK with JDK 21, Linux desktop build
-tools (clang, cmake, ninja, GTK 3 headers), podman and podman-compose.
+tools (clang, cmake, ninja, GTK 3 and libsecret headers: `libsecret-1-dev` on Debian/Ubuntu, `libsecret-devel` on Fedora), podman and podman-compose.
 
 ```bash
 flutter pub get
@@ -16,6 +16,12 @@ dart run sasa_cli:sasa --help
 tools/radicale-test/up.sh # test CalDAV server on 127.0.0.1:5232
 (cd packages/caldav && dart test -P integration) # needs the test server
 ```
+
+## Data
+
+- Your calendars and tasks stay where they are; Sasa only reads them.
+- Sasa's own data (settings shared between devices, event logs, reports) goes in a `Sasa/` folder inside a folder you already sync (Syncthing or Nextcloud). Each device appends only to its own `Sasa/devices/<device-id>/log-YYYY-MM.jsonl`.
+- Passwords never go in the synced folder.
 
 ## Disclaimer
 

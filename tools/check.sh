@@ -12,7 +12,7 @@ for pkg in packages/core packages/caldav packages/research apps/cli; do
   (cd "$pkg" && dart test)
 done
 
-for pkg in packages/davx_bridge apps/app; do
+for pkg in packages/davx_bridge packages/saf_folder apps/app; do
   echo "== flutter test: $pkg"
   (cd "$pkg" && flutter test)
 done

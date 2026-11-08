@@ -2,13 +2,25 @@ import 'package:davx_bridge/davx_bridge.dart';
 import 'package:flutter/material.dart';
 import 'package:sasa_core/sasa_core.dart';
 
+import 'data_controller.dart';
 import 'source_controller.dart';
 
-/// Settings: where calendars and tasks come from.
+/// Settings: the synced folder and where calendars and tasks come from.
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key, required this.controller});
+  const SettingsScreen({
+    super.key,
+    required this.controller,
+    this.data,
+    this.onEditSetup,
+  });
 
   final SourceController controller;
+
+  /// Shows the synced folder when given.
+  final DataController? data;
+
+  /// Opens the folder and account setup.
+  final VoidCallback? onEditSetup;
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -32,8 +44,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
         builder: (context, _) {
           final setup = _c.setup;
           final status = setup?.status;
+          final folder = widget.data?.location;
           return ListView(
             children: [
+              if (widget.onEditSetup != null) ...[
+                const _Header('Data'),
+                ListTile(
+                  leading: const Icon(Icons.folder_outlined),
+                  title: const Text('Synced folder'),
+                  subtitle: Text(folder?.name ?? 'Not chosen'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: widget.onEditSetup,
+                ),
+                ListTile(
+                  leading: const Icon(Icons.key_outlined),
+                  title: const Text('CalDAV account'),
+                  subtitle: const Text('Server, user name and password'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: widget.onEditSetup,
+                ),
+              ],
               const _Header('Calendar and tasks'),
               ListTile(
                 leading: const Icon(Icons.event_note),

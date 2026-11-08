@@ -6,6 +6,9 @@ import 'package:timezone/timezone.dart' as tz;
 import 'device_settings.dart';
 import 'source_setup.dart';
 
+/// Builds the CalDAV source from the stored account; null when none is set.
+typedef CalDavFactory = Future<CalendarSource?> Function();
+
 /// Holds the current [SourceSetup] for the UI and rebuilds it when the
 /// setting or the permissions change.
 final class SourceController extends ChangeNotifier {
@@ -21,7 +24,9 @@ final class SourceController extends ChangeNotifier {
   final DeviceSettings settings;
   final DavxBridgeApi bridge;
   final tz.Location zone;
-  final CalendarSource? calDav;
+
+  /// Called on every [refresh], so a changed account takes effect.
+  final CalDavFactory? calDav;
 
   SourceSetup? _setup;
   bool _forceCalDav = false;
@@ -47,7 +52,7 @@ final class SourceController extends ChangeNotifier {
       settings: settings,
       bridge: bridge,
       zone: zone,
-      calDav: calDav,
+      calDav: await calDav?.call(),
     );
   });
 
