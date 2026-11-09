@@ -152,6 +152,7 @@ AppServices testServices({
   FakeBridge? bridge,
   CalendarSource? calDav,
   CalDavTester? tester,
+  Clock? clock,
 }) {
   final store = secrets ?? MemorySecretStore();
   return AppServices(
@@ -159,7 +160,7 @@ AppServices testServices({
     settings: settings ?? MemoryDeviceSettings(),
     secrets: store,
     access: access ?? MemoryFolderAccess(),
-    clock: FakeClock(DateTime.utc(2026, 11, 8, 9)),
+    clock: clock ?? FakeClock(DateTime.utc(2026, 11, 8, 9)),
     bridge: bridge ?? FakeBridge(),
     calDav: () async =>
         calDav ?? (await store.calDavAccount() == null ? null : FakeSource()),

@@ -27,6 +27,7 @@ CalEvent ev({String title = 'Event', String calendarName = 'Personal'}) =>
     );
 
 void main() {
+  evaluationOrderTests();
   group('matching fields', () {
     test('calendar rule matches event calendar, case-insensitively', () {
       final c = Categoriser(
@@ -300,5 +301,19 @@ void main() {
       final c = Categoriser(rules: [rule], categories: categories);
       expect(c.classifyTask(t)?.categoryId, 'writing');
     });
+  });
+}
+
+void evaluationOrderTests() {
+  test('evaluationOrder: highest priority first, ties in list order', () {
+    const a = MappingRule(field: MatchField.tag, pattern: 'a', categoryId: 'x');
+    const b = MappingRule(
+      field: MatchField.tag,
+      pattern: 'b',
+      categoryId: 'x',
+      priority: 5,
+    );
+    const c = MappingRule(field: MatchField.tag, pattern: 'c', categoryId: 'x');
+    expect(Categoriser.evaluationOrder([a, b, c]), [b, a, c]);
   });
 }

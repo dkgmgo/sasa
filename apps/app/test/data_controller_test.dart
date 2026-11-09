@@ -126,4 +126,64 @@ void main() {
     expect(d.accessLost, isTrue);
     expect(d.log, isNull);
   });
+
+  group('updateConfig', () {
+    const rule = MappingRule(
+      field: MatchField.calendar,
+      pattern: 'Cours',
+      categoryId: 'teaching',
+    );
+
+    Future<AppConfig> onDisk(MemoryFolderAccess access) async =>
+        (await SasaFolder(access.folder(syncA.ref)).loadConfig())!;
+
+    test('saves the edit with a new updatedAt', () async {
+      final access = MemoryFolderAccess();
+      final d = make(access, saved: syncA);
+      await d.openSaved();
+      final before = d.config!.updatedAt;
+      clock.advance(const Duration(minutes: 5));
+
+      expect(await d.updateConfig(ConfigEdits.addRule(rule)), isNull);
+      expect(d.config!.rules, [rule]);
+      expect(d.config!.updatedAt.isAfter(before), isTrue);
+      expect(await onDisk(access), d.config);
+    });
+
+    test(
+      'applies the edit to the newest file, keeping other changes',
+      () async {
+        final access = MemoryFolderAccess();
+        final d = make(access, saved: syncA);
+        await d.openSaved();
+        // Another device renamed a category after this one loaded.
+        final folder = SasaFolder(access.folder(syncA.ref));
+        final synced = await folder.loadConfig();
+        await folder.saveConfig(
+          ConfigEdits.putCategory(
+            synced!.categoryById('admin')!.copyWith(name: 'Paperwork'),
+          )(synced),
+        );
+
+        expect(await d.updateConfig(ConfigEdits.addRule(rule)), isNull);
+        final saved = await onDisk(access);
+        expect(saved.rules, [rule]);
+        expect(saved.categoryById('admin')!.name, 'Paperwork');
+      },
+    );
+
+    test('a vanished target gives a message and reloads', () async {
+      final access = MemoryFolderAccess();
+      final d = make(access, saved: syncA);
+      await d.openSaved();
+      final message = await d.updateConfig(ConfigEdits.removeRule(rule));
+      expect(message, contains('another device'));
+      expect(d.config!.rules, isEmpty);
+    });
+
+    test('no open folder gives a message', () async {
+      final d = make(MemoryFolderAccess());
+      expect(await d.updateConfig(ConfigEdits.addRule(rule)), isNotNull);
+    });
+  });
 }

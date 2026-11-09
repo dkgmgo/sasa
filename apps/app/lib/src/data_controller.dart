@@ -84,6 +84,35 @@ final class DataController extends ChangeNotifier {
     _conflicts = await f.configConflicts();
   });
 
+  /// Applies [edit] to the newest `config.json` and saves it.
+  ///
+  /// The file is read again first, so a change synced from another device
+  /// since the last load is kept. Returns null on success, else a message
+  /// for the user (the edit's target is gone, the file is unreadable, the
+  /// folder is lost).
+  Future<String?> updateConfig(ConfigEdit edit) =>
+      _run('Sasa can no longer open the synced folder.', () async {
+        final f = _folder;
+        if (f == null) return 'No synced folder is open.';
+        try {
+          final base = await f.loadConfig() ?? _config;
+          if (base == null) return 'config.json cannot be read.';
+          final next = applyConfigEdit(base, edit, clock);
+          await f.saveConfig(next);
+          _config = next;
+          _error = null;
+          return null;
+        } on ConfigEditConflict {
+          await _load();
+          return 'This was changed on another device. Showing the latest '
+              'version; try again.';
+        } on FormatException catch (e) {
+          return 'config.json cannot be read (${e.message}).';
+        } on UnsupportedConfigVersion catch (e) {
+          return '$e';
+        }
+      });
+
   Future<void> _load() async {
     final f = _folder!;
     _error = null;

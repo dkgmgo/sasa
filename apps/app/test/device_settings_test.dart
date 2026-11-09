@@ -1,11 +1,13 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sasa/src/device_settings.dart';
 import 'package:sasa/src/folder_access.dart';
 import 'package:sasa_core/io.dart';
 import 'package:sasa_core/sasa_core.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 
@@ -22,6 +24,23 @@ void main() {
     expect(await s.forceCalDav(), isFalse);
     await s.setForceCalDav(true);
     expect(await PrefsDeviceSettings().forceCalDav(), isTrue);
+  });
+
+  test('theme mode defaults to system and persists', () async {
+    final s = PrefsDeviceSettings();
+    expect(await s.themeMode(), ThemeMode.system);
+    await s.setThemeMode(ThemeMode.light);
+    expect(await PrefsDeviceSettings().themeMode(), ThemeMode.light);
+    await s.setThemeMode(ThemeMode.dark);
+    expect(await PrefsDeviceSettings().themeMode(), ThemeMode.dark);
+  });
+
+  test('an unknown stored theme mode falls back to system', () async {
+    await SharedPreferencesAsync().setString(
+      PrefsDeviceSettings.themeModeKey,
+      'sepia',
+    );
+    expect(await PrefsDeviceSettings().themeMode(), ThemeMode.system);
   });
 
   test('device id is generated once, folder-safe, and kept', () async {

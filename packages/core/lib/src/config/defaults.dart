@@ -10,7 +10,7 @@ List<Category> defaultCategories() => List.unmodifiable([
   const Category(
     id: 'reading',
     name: 'Reading',
-    color: '#2E7D32',
+    color: '#F3E3C3',
     weeklyTargetMin: 8 * 60,
     defaultEnergy: Energy.medium,
     defaultDurationMin: 45,
@@ -18,7 +18,7 @@ List<Category> defaultCategories() => List.unmodifiable([
   Category(
     id: 'research',
     name: 'Research',
-    color: '#1565C0',
+    color: '#FF7A5C',
     weeklyTargetMin: 15 * 60,
     defaultEnergy: Energy.high,
     defaultDurationMin: 90,
@@ -27,7 +27,7 @@ List<Category> defaultCategories() => List.unmodifiable([
   const Category(
     id: 'writing',
     name: 'Writing/Blog',
-    color: '#6A1B9A',
+    color: '#0B7474',
     weeklyTargetMin: 2 * 60,
     defaultEnergy: Energy.high,
     defaultDurationMin: 60,
@@ -35,7 +35,7 @@ List<Category> defaultCategories() => List.unmodifiable([
   const Category(
     id: 'news',
     name: 'News/Veille',
-    color: '#EF6C00',
+    color: '#FFC9B8',
     weeklyTargetMin: 60,
     defaultEnergy: Energy.low,
     defaultDurationMin: 20,
@@ -43,7 +43,7 @@ List<Category> defaultCategories() => List.unmodifiable([
   const Category(
     id: 'teaching',
     name: 'Teaching',
-    color: '#c6b328',
+    color: '#BDE7EC',
     // Teaching time is driven by the timetable, not a target.
     weeklyTargetMin: 0,
     defaultEnergy: Energy.medium,
@@ -52,7 +52,7 @@ List<Category> defaultCategories() => List.unmodifiable([
   const Category(
     id: 'admin',
     name: 'Admin',
-    color: '#546E7A',
+    color: '#0E3B43',
     weeklyTargetMin: 60,
     defaultEnergy: Energy.low,
     defaultDurationMin: 30,

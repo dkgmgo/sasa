@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sasa/main.dart';
 import 'package:sasa/src/device_settings.dart';
+import 'package:sasa/src/home_shell.dart';
 import 'package:sasa/src/secret_store.dart';
+import 'package:sasa/src/today_screen.dart';
 import 'package:sasa_core/sasa_core.dart';
 
 import 'fakes.dart';
@@ -70,8 +72,7 @@ void main() {
       await tester.ensureVisible(finish);
       await tester.tap(finish);
       await tester.pumpAndSettle();
-      expect(find.text(sasaGreeting), findsOneWidget);
-      expect(find.text('0 events from 0 devices'), findsOneWidget);
+      expect(find.byType(HomeShell), findsOneWidget);
       expect(await settings.setupDone(), isTrue);
     });
 
@@ -112,7 +113,7 @@ void main() {
       await tester.tap(finish);
       await tester.pumpAndSettle();
       expect(secrets.account, testAccount);
-      expect(find.text(sasaGreeting), findsOneWidget);
+      expect(find.byType(HomeShell), findsOneWidget);
     });
 
     testWidgets('Linux has no source choice', (tester) async {
@@ -126,12 +127,16 @@ void main() {
   });
 
   group('home', () {
-    testWidgets('shows the greeting and folder status', (tester) async {
+    testWidgets('opens on Today; settings show the folder status', (
+      tester,
+    ) async {
       await tester.pumpWidget(SasaApp(services: ready()));
       await tester.pumpAndSettle();
-      expect(find.text(sasaGreeting), findsOneWidget);
-      expect(find.text(placeholderMessage()), findsOneWidget);
+      expect(find.byType(TodayScreen), findsOneWidget);
+      await tester.tap(find.byTooltip('Settings'));
+      await tester.pumpAndSettle();
       expect(find.text('Sync'), findsOneWidget);
+      expect(find.text('0 events from 0 devices'), findsOneWidget);
     });
 
     testWidgets('config conflict banner keeps the newest', (tester) async {

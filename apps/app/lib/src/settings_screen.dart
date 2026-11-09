@@ -4,6 +4,7 @@ import 'package:sasa_core/sasa_core.dart';
 
 import 'data_controller.dart';
 import 'source_controller.dart';
+import 'theme_controller.dart';
 
 /// Settings: the synced folder and where calendars and tasks come from.
 class SettingsScreen extends StatefulWidget {
@@ -11,6 +12,7 @@ class SettingsScreen extends StatefulWidget {
     super.key,
     required this.controller,
     this.data,
+    this.theme,
     this.onEditSetup,
   });
 
@@ -18,6 +20,9 @@ class SettingsScreen extends StatefulWidget {
 
   /// Shows the synced folder when given.
   final DataController? data;
+
+  /// Shows the light/dark choice when given.
+  final ThemeController? theme;
 
   /// Opens the folder and account setup.
   final VoidCallback? onEditSetup;
@@ -47,6 +52,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
           final folder = widget.data?.location;
           return ListView(
             children: [
+              if (widget.theme case final theme?) ...[
+                const _Header('Appearance'),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                  child: ValueListenableBuilder<ThemeMode>(
+                    valueListenable: theme,
+                    builder: (context, mode, _) => SegmentedButton<ThemeMode>(
+                      segments: const [
+                        ButtonSegment(
+                          value: ThemeMode.system,
+                          icon: Icon(Icons.brightness_auto_outlined),
+                          label: Text('System'),
+                        ),
+                        ButtonSegment(
+                          value: ThemeMode.light,
+                          icon: Icon(Icons.light_mode_outlined),
+                          label: Text('Light'),
+                        ),
+                        ButtonSegment(
+                          value: ThemeMode.dark,
+                          icon: Icon(Icons.dark_mode_outlined),
+                          label: Text('Dark'),
+                        ),
+                      ],
+                      selected: {mode},
+                      showSelectedIcon: false,
+                      onSelectionChanged: (s) => theme.choose(s.first),
+                    ),
+                  ),
+                ),
+              ],
               if (widget.onEditSetup != null) ...[
                 const _Header('Data'),
                 ListTile(
@@ -56,6 +92,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   trailing: const Icon(Icons.chevron_right),
                   onTap: widget.onEditSetup,
                 ),
+                if (widget.data case final data? when data.isOpen)
+                  ListenableBuilder(
+                    listenable: data,
+                    builder: (context, _) => FolderStatus(data: data),
+                  ),
                 ListTile(
                   leading: const Icon(Icons.key_outlined),
                   title: const Text('CalDAV account'),
@@ -152,4 +193,32 @@ class _Header extends StatelessWidget {
           ?.copyWith(color: Theme.of(context).colorScheme.primary),
     ),
   );
+}
+
+/// One line about the merged logs in the synced folder.
+class FolderStatus extends StatelessWidget {
+  const FolderStatus({super.key, required this.data});
+
+  final DataController data;
+
+  @override
+  Widget build(BuildContext context) {
+    final snap = data.snapshot;
+    final devices = snap?.devices.length ?? 0;
+    final events = snap?.events.length ?? 0;
+    return ListTile(
+      leading: const Icon(Icons.history),
+      title: const Text('Activity logs'),
+      subtitle: Text(
+        '$events event${events == 1 ? '' : 's'} from $devices '
+        'device${devices == 1 ? '' : 's'}'
+        '${(snap?.newerVersionEvents ?? 0) > 0 ? ' · some need a newer Sasa' : ''}',
+      ),
+      trailing: IconButton(
+        tooltip: 'Reload',
+        icon: const Icon(Icons.refresh),
+        onPressed: data.busy ? null : data.reload,
+      ),
+    );
+  }
 }

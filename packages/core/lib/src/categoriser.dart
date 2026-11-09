@@ -57,14 +57,20 @@ final class Categoriser {
   final Map<String, Category> _categories;
   final List<_CompiledRule> _rules;
 
-  static List<_CompiledRule> _compile(List<MappingRule> rules) {
+  static List<_CompiledRule> _compile(List<MappingRule> rules) => [
+    for (final r in evaluationOrder(rules)) _CompiledRule(r),
+  ];
+
+  /// [rules] in the order they are tried: highest priority first, ties in
+  /// list order.
+  static List<MappingRule> evaluationOrder(List<MappingRule> rules) {
     final indexed = [for (var i = 0; i < rules.length; i++) (i, rules[i])]
       ..sort((a, b) {
         // List.sort is not stable: break ties on the original index.
         final byPriority = b.$2.priority.compareTo(a.$2.priority);
         return byPriority != 0 ? byPriority : a.$1.compareTo(b.$1);
       });
-    return [for (final (_, r) in indexed) _CompiledRule(r)];
+    return [for (final (_, r) in indexed) r];
   }
 
   /// Classification for [event], or null if it belongs in the inbox.

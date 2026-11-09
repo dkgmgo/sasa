@@ -79,6 +79,7 @@ void main() {
           durationMin: 60,
         ),
       ],
+      inboxIgnored: const [InboxIgnore(field: MatchField.list, name: 'To Buy')],
     );
 
     test('round-trips through a JSON string', () {
@@ -96,6 +97,20 @@ void main() {
       final json = encodeDecode(config);
       (json['weights']! as Map<String, Object?>)['urgency'] = 1;
       expect(AppConfig.fromJson(json).weights.urgency, 1.0);
+    });
+
+    test('inboxIgnored is optional, for files written before it existed', () {
+      final json = encodeDecode(full)..remove('inboxIgnored');
+      expect(AppConfig.fromJson(json).inboxIgnored, isEmpty);
+      expect(config.inboxIgnored, isEmpty);
+    });
+
+    test('an inboxIgnored entry must be a calendar or a list', () {
+      final json = encodeDecode(full)
+        ..['inboxIgnored'] = [
+          {'field': 'tag', 'name': 'x'},
+        ];
+      expect(() => AppConfig.fromJson(json), throwsFormatException);
     });
 
     test('unknown keys are ignored', () {

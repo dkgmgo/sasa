@@ -2,6 +2,7 @@ import '../clock.dart';
 import '../free_blocks.dart';
 import '../json.dart';
 import '../models/category.dart';
+import '../models/inbox_ignore.dart';
 import '../models/mapping_rule.dart';
 import '../models/nudge.dart';
 import '../time_zones.dart';
@@ -32,7 +33,9 @@ final class AppConfig {
     required List<MappingRule> rules,
     required List<Nudge> nudges,
     required this.weights,
+    List<InboxIgnore> inboxIgnored = const [],
   }) : updatedAt = utcInstant(updatedAt),
+       inboxIgnored = List.unmodifiable(inboxIgnored),
        categories = List.unmodifiable(categories),
        rules = List.unmodifiable(rules),
        nudges = List.unmodifiable(nudges) {
@@ -85,6 +88,11 @@ final class AppConfig {
       rules: data.reqList('rules', (e) => MappingRule.fromJson(asJson(e))),
       nudges: data.reqList('nudges', (e) => Nudge.fromJson(asJson(e))),
       weights: SuggesterWeights.fromJson(data.reqObject('weights')),
+      // Optional: absent in files written before it existed.
+      inboxIgnored: switch (data.opt<List<Object?>>('inboxIgnored')) {
+        null => const [],
+        final list => [for (final e in list) InboxIgnore.fromJson(asJson(e))],
+      },
     );
   }
 
@@ -105,6 +113,9 @@ final class AppConfig {
   final List<Nudge> nudges;
   final SuggesterWeights weights;
 
+  /// Calendars and lists hidden from the Unclassified inbox for now.
+  final List<InboxIgnore> inboxIgnored;
+
   Category? categoryById(String id) {
     for (final c in categories) {
       if (c.id == id) return c;
@@ -120,6 +131,7 @@ final class AppConfig {
     List<MappingRule>? rules,
     List<Nudge>? nudges,
     SuggesterWeights? weights,
+    List<InboxIgnore>? inboxIgnored,
   }) => AppConfig(
     updatedAt: updatedAt ?? this.updatedAt,
     timeZone: timeZone ?? this.timeZone,
@@ -128,6 +140,7 @@ final class AppConfig {
     rules: rules ?? this.rules,
     nudges: nudges ?? this.nudges,
     weights: weights ?? this.weights,
+    inboxIgnored: inboxIgnored ?? this.inboxIgnored,
   );
 
   Json toJson() => {
@@ -139,6 +152,7 @@ final class AppConfig {
     'rules': [for (final r in rules) r.toJson()],
     'nudges': [for (final n in nudges) n.toJson()],
     'weights': weights.toJson(),
+    'inboxIgnored': [for (final i in inboxIgnored) i.toJson()],
   };
 
   @override
@@ -150,7 +164,8 @@ final class AppConfig {
       listEquals(other.categories, categories) &&
       listEquals(other.rules, rules) &&
       listEquals(other.nudges, nudges) &&
-      other.weights == weights;
+      other.weights == weights &&
+      listEquals(other.inboxIgnored, inboxIgnored);
 
   @override
   int get hashCode => Object.hash(
@@ -161,5 +176,6 @@ final class AppConfig {
     Object.hashAll(rules),
     Object.hashAll(nudges),
     weights,
+    Object.hashAll(inboxIgnored),
   );
 }

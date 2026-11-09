@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:flutter/material.dart' show ThemeMode;
 import 'package:sasa_core/io.dart';
 import 'package:sasa_core/sasa_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -25,6 +26,10 @@ abstract interface class DeviceSettings {
   /// True once the first-run setup was completed.
   Future<bool> setupDone();
   Future<void> setSetupDone(bool value);
+
+  /// Light, dark, or following the system ([ThemeMode.system], the default).
+  Future<ThemeMode> themeMode();
+  Future<void> setThemeMode(ThemeMode value);
 }
 
 /// [DeviceSettings] in the platform's preferences store (SharedPreferences
@@ -47,6 +52,7 @@ final class PrefsDeviceSettings implements DeviceSettings {
   static const deviceIdKey = 'device.id';
   static const syncFolderKey = 'folder.location';
   static const setupDoneKey = 'setup.done';
+  static const themeModeKey = 'ui.themeMode';
 
   final SharedPreferencesAsync _prefs;
   final DeviceFile? deviceFile;
@@ -117,6 +123,17 @@ final class PrefsDeviceSettings implements DeviceSettings {
 
   @override
   Future<void> setSetupDone(bool value) => _prefs.setBool(setupDoneKey, value);
+
+  @override
+  Future<ThemeMode> themeMode() async {
+    final name = await _prefs.getString(themeModeKey);
+    return ThemeMode.values.where((m) => m.name == name).firstOrNull ??
+        ThemeMode.system;
+  }
+
+  @override
+  Future<void> setThemeMode(ThemeMode value) =>
+      _prefs.setString(themeModeKey, value.name);
 }
 
 /// In-memory [DeviceSettings] for tests.
@@ -126,11 +143,14 @@ final class MemoryDeviceSettings implements DeviceSettings {
     String deviceId = 'test-device',
     FolderLocation? syncFolder,
     bool setupDone = false,
-  }) : _force = forceCalDav,
+    ThemeMode themeMode = ThemeMode.system,
+  }) : _theme = themeMode,
+       _force = forceCalDav,
        _id = deviceId,
        _folder = syncFolder,
        _done = setupDone;
 
+  ThemeMode _theme;
   bool _force;
   final String _id;
   FolderLocation? _folder;
@@ -156,4 +176,10 @@ final class MemoryDeviceSettings implements DeviceSettings {
 
   @override
   Future<void> setSetupDone(bool value) async => _done = value;
+
+  @override
+  Future<ThemeMode> themeMode() async => _theme;
+
+  @override
+  Future<void> setThemeMode(ThemeMode value) async => _theme = value;
 }

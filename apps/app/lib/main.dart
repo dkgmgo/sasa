@@ -11,15 +11,20 @@ import 'src/caldav_account.dart';
 import 'src/data_controller.dart';
 import 'src/device_settings.dart';
 import 'src/folder_access.dart';
+import 'src/home_shell.dart';
 import 'src/secret_store.dart';
 import 'src/settings_screen.dart';
 import 'src/setup_controller.dart';
 import 'src/setup_screen.dart';
 import 'src/source_controller.dart';
 import 'src/source_setup.dart';
+import 'src/theme/pwani.dart';
+import 'src/theme_controller.dart';
+import 'src/today_controller.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  registerFontLicences();
   final platform = currentSourcePlatform();
   final isAndroid = platform == SourcePlatform.android;
   final deviceFilePath = isAndroid
@@ -32,9 +37,11 @@ void main() {
   final secrets = SecureSecretStore();
   final zone = locationFor(defaultTimeZone);
   final clock = FunctionClock(DateTime.now);
+  final themeMode = await settings.themeMode();
   runApp(
     SasaApp(
       services: AppServices(
+        themeMode: themeMode,
         platform: platform,
         settings: settings,
         secrets: secrets,
@@ -61,14 +68,23 @@ final class AppServices {
     required CalDavFactory calDav,
     required this.zone,
     this.testCalDav,
-  }) : data = DataController(settings: settings, access: access, clock: clock),
+    ThemeMode? themeMode,
+  }) : theme = ThemeController(settings, initial: themeMode),
+       data = DataController(settings: settings, access: access, clock: clock),
        sources = SourceController(
          platform: platform,
          settings: settings,
          bridge: bridge,
          zone: zone,
          calDav: calDav,
-       );
+       ) {
+    today = TodayController(
+      data: data,
+      sources: sources,
+      clock: clock,
+      fallbackZone: zone,
+    );
+  }
 
   final SourcePlatform platform;
   final DeviceSettings settings;
@@ -76,6 +92,10 @@ final class AppServices {
   final FolderAccess access;
   final DataController data;
   final SourceController sources;
+  late final TodayController today;
+
+  /// This device's choice of light, dark or system theme.
+  final ThemeController theme;
   final CalDavTester? testCalDav;
   final tz.Location zone;
 
@@ -106,12 +126,15 @@ class SasaApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const seed = Color(0xFF2E7D6B);
-    return MaterialApp(
-      title: 'Sasa',
-      theme: ThemeData(colorSchemeSeed: seed),
-      darkTheme: ThemeData(colorSchemeSeed: seed, brightness: Brightness.dark),
-      home: RootScreen(services: services),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: services.theme,
+      builder: (context, mode, _) => MaterialApp(
+        title: 'Sasa',
+        theme: pwaniTheme(Brightness.light),
+        darkTheme: pwaniTheme(Brightness.dark),
+        themeMode: mode,
+        home: RootScreen(services: services),
+      ),
     );
   }
 }
@@ -152,8 +175,7 @@ class _RootScreenState extends State<RootScreen> {
   );
 }
 
-/// Temporary home screen until the Today screen exists: greeting, folder
-/// status and problems that need the user.
+/// The main screens, with routes to settings and setup.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key, required this.services});
 
@@ -170,128 +192,18 @@ class HomeScreen extends StatelessWidget {
   );
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final data = services.data;
-    return Scaffold(
-      appBar: AppBar(
-        actions: [
-          IconButton(
-            tooltip: 'Settings',
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => SettingsScreen(
-                  controller: services.sources,
-                  data: data,
-                  onEditSetup: () => _openSetup(context),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: ListenableBuilder(
-        listenable: data,
-        builder: (context, _) => ListView(
-          padding: const EdgeInsets.all(24),
-          children: [
-            if (data.accessLost)
-              _Banner(
-                icon: Icons.folder_off_outlined,
-                text:
-                    'Sasa can no longer open "${data.location?.name ?? 'the '
-                            'synced folder'}". Choose it again.',
-                action: 'Choose folder',
-                onAction: () => _openSetup(context),
-              ),
-            if (data.conflicts.isNotEmpty)
-              _Banner(
-                icon: Icons.call_split,
-                text:
-                    'Your sync app made ${data.conflicts.length} conflicting '
-                    'cop${data.conflicts.length == 1 ? 'y' : 'ies'} of '
-                    'config.json. Keep the most recently changed version?',
-                action: 'Keep newest',
-                onAction: data.busy ? null : data.keepNewestConfig,
-              ),
-            if (data.error != null)
-              _Banner(icon: Icons.error_outline, text: data.error!),
-            const SizedBox(height: 24),
-            Text(
-              sasaGreeting,
-              style: theme.textTheme.displayMedium,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              placeholderMessage(),
-              style: theme.textTheme.bodyLarge,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            if (data.isOpen) FolderStatus(data: data),
-          ],
+  Widget build(BuildContext context) => HomeShell(
+    data: services.data,
+    today: services.today,
+    onOpenSetup: () => _openSetup(context),
+    onOpenSettings: () => Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => SettingsScreen(
+          controller: services.sources,
+          data: services.data,
+          theme: services.theme,
+          onEditSetup: () => _openSetup(context),
         ),
-      ),
-    );
-  }
-}
-
-/// One line about the synced folder and the merged logs.
-class FolderStatus extends StatelessWidget {
-  const FolderStatus({super.key, required this.data});
-
-  final DataController data;
-
-  @override
-  Widget build(BuildContext context) {
-    final snap = data.snapshot;
-    final devices = snap?.devices.length ?? 0;
-    final events = snap?.events.length ?? 0;
-    return ListTile(
-      leading: const Icon(Icons.folder_outlined),
-      title: Text(data.location!.name),
-      subtitle: Text(
-        '$events event${events == 1 ? '' : 's'} from $devices '
-        'device${devices == 1 ? '' : 's'}'
-        '${(snap?.newerVersionEvents ?? 0) > 0 ? ' · some need a newer Sasa' : ''}',
-      ),
-      trailing: IconButton(
-        tooltip: 'Reload',
-        icon: const Icon(Icons.refresh),
-        onPressed: data.busy ? null : data.reload,
-      ),
-    );
-  }
-}
-
-class _Banner extends StatelessWidget {
-  const _Banner({
-    required this.icon,
-    required this.text,
-    this.action,
-    this.onAction,
-  });
-
-  final IconData icon;
-  final String text;
-  final String? action;
-  final VoidCallback? onAction;
-
-  @override
-  Widget build(BuildContext context) => Card(
-    color: Theme.of(context).colorScheme.secondaryContainer,
-    child: Padding(
-      padding: const EdgeInsets.all(12),
-      child: Row(
-        children: [
-          Icon(icon),
-          const SizedBox(width: 12),
-          Expanded(child: Text(text)),
-          if (action != null)
-            TextButton(onPressed: onAction, child: Text(action!)),
-        ],
       ),
     ),
   );
