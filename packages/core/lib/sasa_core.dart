@@ -4,6 +4,9 @@
 /// Dart VM and reused by the command-line tool.
 library;
 
+export 'src/brief/brief_renderer.dart';
+export 'src/brief/brief_schedule.dart';
+export 'src/brief/brief_settings.dart';
 export 'src/categoriser.dart';
 export 'src/clock.dart';
 export 'src/config/app_config.dart';

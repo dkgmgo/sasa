@@ -2,6 +2,8 @@ import 'package:davx_bridge/davx_bridge.dart';
 import 'package:flutter/material.dart';
 import 'package:sasa_core/sasa_core.dart';
 
+import 'brief/brief_scheduler.dart';
+import 'brief/brief_settings_section.dart';
 import 'data_controller.dart';
 import 'source_controller.dart';
 import 'theme_controller.dart';
@@ -13,6 +15,8 @@ class SettingsScreen extends StatefulWidget {
     required this.controller,
     this.data,
     this.theme,
+    this.brief,
+    this.isLinux = false,
     this.onEditSetup,
   });
 
@@ -23,6 +27,12 @@ class SettingsScreen extends StatefulWidget {
 
   /// Shows the light/dark choice when given.
   final ThemeController? theme;
+
+  /// This phone's brief scheduler (Android).
+  final BriefController? brief;
+
+  /// Explains the `sasa` timers in the brief section.
+  final bool isLinux;
 
   /// Opens the folder and account setup.
   final VoidCallback? onEditSetup;
@@ -81,6 +91,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       onSelectionChanged: (s) => theme.choose(s.first),
                     ),
                   ),
+                ),
+              ],
+              if (widget.data case final data? when data.config != null) ...[
+                const _Header('Morning brief'),
+                BriefSettingsSection(
+                  data: data,
+                  brief: widget.brief,
+                  isLinux: widget.isLinux,
                 ),
               ],
               if (widget.onEditSetup != null) ...[

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:davx_bridge/davx_bridge.dart';
@@ -7,6 +8,9 @@ import 'package:sasa_core/io.dart';
 import 'package:sasa_core/sasa_core.dart';
 import 'package:timezone/timezone.dart' as tz;
 
+import 'src/brief/background.dart';
+import 'src/brief/brief_notifier.dart';
+import 'src/brief/brief_scheduler.dart';
 import 'src/caldav_account.dart';
 import 'src/data_controller.dart';
 import 'src/device_settings.dart';
@@ -38,22 +42,30 @@ Future<void> main() async {
   final zone = locationFor(defaultTimeZone);
   final clock = FunctionClock(DateTime.now);
   final themeMode = await settings.themeMode();
-  runApp(
-    SasaApp(
-      services: AppServices(
-        themeMode: themeMode,
-        platform: platform,
-        settings: settings,
-        secrets: secrets,
-        access: isAndroid ? SafFolderAccess(SafFolder()) : PathFolderAccess(),
-        clock: clock,
-        bridge: DavxBridge(),
-        calDav: () => calDavSourceFrom(secrets, zone),
-        testCalDav: testCalDavAccount,
-        zone: zone,
-      ),
-    ),
+  BriefNotifier? notifier;
+  if (isAndroid) {
+    notifier = LocalBriefNotifier();
+    try {
+      await registerBackgroundTick();
+    } on Exception catch (e) {
+      debugPrint('Background tick not registered: $e');
+    }
+  }
+  final services = AppServices(
+    themeMode: themeMode,
+    platform: platform,
+    settings: settings,
+    secrets: secrets,
+    access: isAndroid ? SafFolderAccess(SafFolder()) : PathFolderAccess(),
+    clock: clock,
+    bridge: DavxBridge(),
+    calDav: () => calDavSourceFrom(secrets, zone),
+    testCalDav: testCalDavAccount,
+    zone: zone,
+    briefNotifier: notifier,
   );
+  await notifier?.init(onOpenToday: services.openToday);
+  runApp(SasaApp(services: services));
 }
 
 /// Everything the screens need, built once.
@@ -69,6 +81,7 @@ final class AppServices {
     required this.zone,
     this.testCalDav,
     ThemeMode? themeMode,
+    BriefNotifier? briefNotifier,
   }) : theme = ThemeController(settings, initial: themeMode),
        data = DataController(settings: settings, access: access, clock: clock),
        sources = SourceController(
@@ -84,6 +97,14 @@ final class AppServices {
       clock: clock,
       fallbackZone: zone,
     );
+    brief = briefNotifier == null
+        ? null
+        : BriefController(
+            scheduler: BriefScheduler(notifier: briefNotifier, clock: clock),
+            data: data,
+            sources: sources,
+            zone: () => today.zone,
+          );
   }
 
   final SourcePlatform platform;
@@ -93,6 +114,27 @@ final class AppServices {
   final DataController data;
   final SourceController sources;
   late final TodayController today;
+
+  /// Schedules the morning brief notification (Android; Linux uses the
+  /// `sasa` timers). Null when not available.
+  late final BriefController? brief;
+
+  /// Navigator of the app, so a tapped brief can return to the home screen.
+  final navigatorKey = GlobalKey<NavigatorState>();
+
+  /// Bumped when the user tapped the brief: Home then shows Today.
+  final todayRequests = ValueNotifier<int>(0);
+
+  /// Brings the Today screen to the front.
+  void openToday() {
+    navigatorKey.currentState?.popUntil((r) => r.isFirst);
+    todayRequests.value++;
+  }
+
+  /// The app came back to the foreground.
+  Future<void> resumed() async {
+    if (data.isOpen) await brief?.refresh();
+  }
 
   /// This device's choice of light, dark or system theme.
   final ThemeController theme;
@@ -113,8 +155,18 @@ final class AppServices {
   Future<bool> start() async {
     if (!await settings.setupDone()) return false;
     final opened = await data.openSaved();
-    if (opened) await sources.refresh();
+    if (opened) {
+      await sources.refresh();
+      unawaited(_startBrief());
+    }
     return opened;
+  }
+
+  Future<void> _startBrief() async {
+    final b = brief;
+    if (b == null) return;
+    if (!await b.notifier.enabled()) await b.notifier.requestPermission();
+    await b.refresh(force: true);
   }
 }
 
@@ -129,6 +181,7 @@ class SasaApp extends StatelessWidget {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: services.theme,
       builder: (context, mode, _) => MaterialApp(
+        navigatorKey: services.navigatorKey,
         title: 'Sasa',
         theme: pwaniTheme(Brightness.light),
         darkTheme: pwaniTheme(Brightness.dark),
@@ -151,6 +204,20 @@ class RootScreen extends StatefulWidget {
 
 class _RootScreenState extends State<RootScreen> {
   late final Future<bool> _started = widget.services.start();
+  late final AppLifecycleListener _lifecycle;
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycle = AppLifecycleListener(onResume: widget.services.resumed);
+  }
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    super.dispose();
+  }
+
   bool _setupJustDone = false;
 
   void _setupDone() {
@@ -195,6 +262,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) => HomeShell(
     data: services.data,
     today: services.today,
+    showToday: services.todayRequests,
     onOpenSetup: () => _openSetup(context),
     onOpenSettings: () => Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -202,6 +270,8 @@ class HomeScreen extends StatelessWidget {
           controller: services.sources,
           data: services.data,
           theme: services.theme,
+          brief: services.brief,
+          isLinux: services.platform == SourcePlatform.linux,
           onEditSetup: () => _openSetup(context),
         ),
       ),

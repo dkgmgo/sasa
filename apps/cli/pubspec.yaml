@@ -12,8 +12,13 @@ executables:
 
 dependencies:
   args: ^2.7.0
+  dbus: ^0.8.0
+  http: ^1.6.0
+  sasa_caldav:
+    path: ../../packages/caldav
   sasa_core:
     path: ../../packages/core
+  timezone: ^0.11.2
 
 dev_dependencies:
   test: ^1.26.0

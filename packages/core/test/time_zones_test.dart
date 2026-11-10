@@ -39,4 +39,9 @@ void main() {
       );
     });
   });
+
+  test('locationOrDefault falls back to the default zone', () {
+    expect(locationOrDefault('Africa/Nairobi').name, 'Africa/Nairobi');
+    expect(locationOrDefault('Mars/Olympus').name, defaultTimeZone);
+  });
 }

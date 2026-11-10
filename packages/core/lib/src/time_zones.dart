@@ -1,6 +1,8 @@
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
+import 'config/defaults.dart';
+
 bool _initialised = false;
 
 /// Returns the IANA [name] location (e.g. `Europe/Paris`), loading the
@@ -13,6 +15,16 @@ tz.Location locationFor(String name) {
     _initialised = true;
   }
   return tz.getLocation(name);
+}
+
+/// [locationFor] [name], or the default zone when [name] is unknown (e.g.
+/// a zone this device's database does not have yet).
+tz.Location locationOrDefault(String name) {
+  try {
+    return locationFor(name);
+  } on tz.LocationNotFoundException {
+    return locationFor(defaultTimeZone);
+  }
 }
 
 /// Converts any [DateTime] (including a `TZDateTime`) to a plain UTC

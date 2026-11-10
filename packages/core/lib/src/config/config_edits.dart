@@ -1,3 +1,4 @@
+import '../brief/brief_settings.dart';
 import '../clock.dart';
 import '../models/category.dart';
 import '../models/inbox_ignore.dart';
@@ -91,6 +92,10 @@ abstract final class ConfigEdits {
             if (i != ignore) i,
         ],
       );
+
+  /// Replaces the morning-brief settings.
+  static ConfigEdit setBrief(BriefSettings brief) =>
+      (c) => c.copyWith(brief: brief);
 
   static int _indexOf(AppConfig c, MappingRule rule) {
     final i = c.rules.indexOf(rule);

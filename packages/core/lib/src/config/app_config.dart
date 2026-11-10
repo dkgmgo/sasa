@@ -1,3 +1,4 @@
+import '../brief/brief_settings.dart';
 import '../clock.dart';
 import '../free_blocks.dart';
 import '../json.dart';
@@ -34,7 +35,9 @@ final class AppConfig {
     required List<Nudge> nudges,
     required this.weights,
     List<InboxIgnore> inboxIgnored = const [],
-  }) : updatedAt = utcInstant(updatedAt),
+    BriefSettings? brief,
+  }) : brief = brief ?? BriefSettings.defaults(),
+       updatedAt = utcInstant(updatedAt),
        inboxIgnored = List.unmodifiable(inboxIgnored),
        categories = List.unmodifiable(categories),
        rules = List.unmodifiable(rules),
@@ -93,6 +96,11 @@ final class AppConfig {
         null => const [],
         final list => [for (final e in list) InboxIgnore.fromJson(asJson(e))],
       },
+      // Optional: absent in files written before it existed.
+      brief: switch (data.optObject('brief')) {
+        null => null,
+        final b => BriefSettings.fromJson(b),
+      },
     );
   }
 
@@ -116,6 +124,9 @@ final class AppConfig {
   /// Calendars and lists hidden from the Unclassified inbox for now.
   final List<InboxIgnore> inboxIgnored;
 
+  /// When the morning brief is sent.
+  final BriefSettings brief;
+
   Category? categoryById(String id) {
     for (final c in categories) {
       if (c.id == id) return c;
@@ -132,6 +143,7 @@ final class AppConfig {
     List<Nudge>? nudges,
     SuggesterWeights? weights,
     List<InboxIgnore>? inboxIgnored,
+    BriefSettings? brief,
   }) => AppConfig(
     updatedAt: updatedAt ?? this.updatedAt,
     timeZone: timeZone ?? this.timeZone,
@@ -141,6 +153,7 @@ final class AppConfig {
     nudges: nudges ?? this.nudges,
     weights: weights ?? this.weights,
     inboxIgnored: inboxIgnored ?? this.inboxIgnored,
+    brief: brief ?? this.brief,
   );
 
   Json toJson() => {
@@ -153,6 +166,7 @@ final class AppConfig {
     'nudges': [for (final n in nudges) n.toJson()],
     'weights': weights.toJson(),
     'inboxIgnored': [for (final i in inboxIgnored) i.toJson()],
+    'brief': brief.toJson(),
   };
 
   @override
@@ -165,7 +179,8 @@ final class AppConfig {
       listEquals(other.rules, rules) &&
       listEquals(other.nudges, nudges) &&
       other.weights == weights &&
-      listEquals(other.inboxIgnored, inboxIgnored);
+      listEquals(other.inboxIgnored, inboxIgnored) &&
+      other.brief == brief;
 
   @override
   int get hashCode => Object.hash(
@@ -177,5 +192,6 @@ final class AppConfig {
     Object.hashAll(nudges),
     weights,
     Object.hashAll(inboxIgnored),
+    brief,
   );
 }

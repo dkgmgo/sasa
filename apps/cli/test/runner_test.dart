@@ -5,7 +5,7 @@ void main() {
   test('stub command reports not implemented', () async {
     final out = StringBuffer();
     final err = StringBuffer();
-    final code = await runSasa(['brief'], out, err);
+    final code = await runSasa(['suggest'], out, err);
     expect(code, exitNotImplemented);
     expect(out.toString(), contains('not implemented'));
     expect(err.toString(), isEmpty);

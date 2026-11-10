@@ -1,27 +1,19 @@
-import 'dart:io';
-
 import 'package:args/command_runner.dart';
-import 'package:sasa_core/io.dart';
 import 'package:sasa_core/sasa_core.dart';
 
+import 'context.dart';
 import 'secrets.dart';
-
-/// Exit code for missing or bad local setup (`sysexits.h` EX_CONFIG).
-const int exitConfig = 78;
 
 /// `sasa status`: what this machine would read and write. Read-only.
 final class StatusCommand extends Command<int> {
-  StatusCommand({
-    required this.out,
-    required this.err,
-    required this.env,
-    required this.keyring,
-  });
+  StatusCommand(this.s);
 
-  final StringSink out;
-  final StringSink err;
-  final Map<String, String> env;
-  final Keyring keyring;
+  final CliServices s;
+
+  StringSink get out => s.out;
+  StringSink get err => s.err;
+  Map<String, String> get env => s.env;
+  Keyring get keyring => s.keyring;
 
   @override
   String get name => 'status';
@@ -34,35 +26,15 @@ final class StatusCommand extends Command<int> {
   @override
   Future<int> run() async {
     final g = globalResults!;
-    final deviceFilePath =
-        g.option('device-file') ?? DeviceFile.defaultPath(env);
-    var info = const DeviceInfo();
-    if (deviceFilePath != null) {
-      try {
-        info = await DeviceFile(deviceFilePath).read();
-      } on FormatException catch (e) {
-        err.writeln('Cannot read $deviceFilePath: ${e.message}');
-        return exitConfig;
-      }
-    }
-    final folderPath =
-        g.option('folder') ?? env['SASA_FOLDER'] ?? info.syncFolder;
-    if (folderPath == null) {
-      err.writeln(
-        'No synced folder set. Pass --folder <path>, set SASA_FOLDER, or '
-        'choose one in the Sasa app on this machine.',
-      );
-      return exitConfig;
-    }
-    if (!Directory(folderPath).existsSync()) {
-      err.writeln('Synced folder $folderPath does not exist.');
-      return exitConfig;
-    }
+    final ctx = await openFolder(g, env, err);
+    if (ctx == null) return exitConfig;
+    final info = ctx.device;
+    final folderPath = ctx.path;
 
     out.writeln('Device: ${info.deviceId ?? 'not set'}');
     out.writeln('Folder: $folderPath');
 
-    final sasa = SasaFolder(IoSyncFolder(folderPath));
+    final sasa = ctx.folder;
     final snap = await sasa
         .eventLog(deviceId: info.deviceId ?? 'cli', clock: _NoClock())
         .load();

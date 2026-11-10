@@ -1,5 +1,6 @@
 import 'package:timezone/timezone.dart' as tz;
 
+import 'brief/brief_settings.dart';
 import 'models/category.dart';
 import 'models/energy.dart';
 import 'models/mapping_rule.dart';
@@ -116,3 +117,12 @@ String describeCategory(Category c) => [
   '${energyLabel(c.defaultEnergy).toLowerCase()} energy',
   if (c.preferredWindow case final w?) 'best $w',
 ].join(' · ');
+
+/// When the morning brief comes: `07:30 on weekdays`, `07:30 every day`,
+/// `Off`.
+String describeBrief(BriefSettings b) => !b.enabled
+    ? 'Off'
+    : '${b.time} ${switch (b.days) {
+        BriefDays.weekdays => 'on weekdays',
+        BriefDays.everyDay => 'every day',
+      }}';

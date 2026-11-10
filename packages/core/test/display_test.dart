@@ -92,4 +92,14 @@ void main() {
       'No weekly target · 1 h blocks · medium energy',
     );
   });
+
+  test('describeBrief', () {
+    final b = BriefSettings.defaults();
+    expect(describeBrief(b), '07:30 on weekdays');
+    expect(
+      describeBrief(b.copyWith(days: BriefDays.everyDay)),
+      '07:30 every day',
+    );
+    expect(describeBrief(b.copyWith(enabled: false)), 'Off');
+  });
 }

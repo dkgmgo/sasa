@@ -21,12 +21,16 @@ class HomeShell extends StatefulWidget {
     required this.today,
     required this.onOpenSettings,
     required this.onOpenSetup,
+    this.showToday,
   });
 
   final DataController data;
   final TodayController today;
   final VoidCallback onOpenSettings;
   final VoidCallback onOpenSetup;
+
+  /// Notifies when Today must be shown (the brief notification was tapped).
+  final Listenable? showToday;
 
   @override
   State<HomeShell> createState() => _HomeShellState();
@@ -36,6 +40,29 @@ class _HomeShellState extends State<HomeShell> {
   HomeTab _tab = HomeTab.today;
 
   void _go(HomeTab tab) => setState(() => _tab = tab);
+
+  void _showToday() => _go(HomeTab.today);
+
+  @override
+  void initState() {
+    super.initState();
+    widget.showToday?.addListener(_showToday);
+  }
+
+  @override
+  void didUpdateWidget(HomeShell old) {
+    super.didUpdateWidget(old);
+    if (old.showToday != widget.showToday) {
+      old.showToday?.removeListener(_showToday);
+      widget.showToday?.addListener(_showToday);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.showToday?.removeListener(_showToday);
+    super.dispose();
+  }
 
   static const _titles = {
     HomeTab.today: 'Today',

@@ -227,7 +227,9 @@ void main() {
         find.text('CalDAV is the only source on this platform.'),
         findsOneWidget,
       );
-      final toggle = tester.widget<SwitchListTile>(find.byType(SwitchListTile));
+      final toggle = tester.widget<SwitchListTile>(
+        find.widgetWithText(SwitchListTile, 'Always use CalDAV'),
+      );
       expect(toggle.value, isTrue);
       expect(toggle.onChanged, isNull);
       expect(find.text('Calendar access'), findsNothing);
